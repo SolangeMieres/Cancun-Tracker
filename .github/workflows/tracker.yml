@@ -1,0 +1,48 @@
+name: Rastreador Cancún
+
+on:
+  schedule:
+    - cron: "0 8,20 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cancun-tracker
+  cancel-in-progress: false
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Ejecutar rastreador
+        env:
+          DUFFEL_TOKEN: ${{ secrets.DUFFEL_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ALWAYS_NOTIFY: "false"
+        run: python tracker.py
+
+      - name: Guardar historial de precios
+        run: |
+          if [[ -n "$(git status --porcelain price_history.json)" ]]; then
+            git config user.name "cancun-tracker-bot"
+            git config user.email "bot@users.noreply.github.com"
+            git add price_history.json
+            git commit -m "Actualiza historial de precios [skip ci]"
+            git push
+          else
+            echo "Sin cambios en el historial."
+          fi
