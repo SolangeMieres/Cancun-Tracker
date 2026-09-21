@@ -2,6 +2,7 @@ name: Rastreador Cancun
 
 on:
   schedule:
+    # Corre cada 12 horas (08:00 y 20:00 UTC ~ 05:00 y 17:00 hora Argentina).
     - cron: "0 8,20 * * *"
   workflow_dispatch: {}
 
